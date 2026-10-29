@@ -46,20 +46,19 @@ class RequestQueue:
 
     def enqueue(self, data: dict) -> Request:
         #FASE 1: comprobar todo, sin modificar nada
-        check_required_fields(data)                                  #(1)
-        request_id = validate_id(data["request_id"])                 #(2)
-        user = validate_user(data["user"])
-        pickup = validate_position(data["pickup"])
-        destination = validate_position(data["destination"])
-        if request_id in self._registry:                             #(3)
+        check_required_fields(data) #4*c1                             #(1)
+        request_id = validate_id(data["request_id"])  #c2             #(2)
+        user = validate_user(data["user"]) #c3
+        pickup = validate_position(data["pickup"]) #c4
+        destination = validate_position(data["destination"]) #c4
+        if request_id in self._registry: #c5(búsqueda en el dic.)     #(3)
             raise DuplicateIdError(f"Ya existe una solicitud con ID {request_id}")
 
         #FASE 2: crear la solicitud y guardarla
-        request = Request(request_id, user, pickup, destination,
-                          arrival_order=self._next_order)            #(4)
-        self._next_order += 1                                        #(5)
-        self._registry[request_id] = request                         #(6)
-        self._pending.append(request)                                #(7)
+        request = Request(request_id, user, pickup, destination,arrival_order=self._next_order) #c6 #(4)
+        self._next_order += 1 #c7                                    #(5)
+        self._registry[request_id] = request #c8(insercion en el dic)#(6)
+        self._pending.append(request) #c9(añadir al final del deque) #(7)
         return request                                               #(8)
 
     ##----------------------------------------------------
@@ -93,9 +92,9 @@ class RequestQueue:
     #Coste: O(1) en el caso esperado.
 
     def find(self, request_id: str) -> Request | None:
-        if not isinstance(request_id, str):                          #(1)
-            return None
-        return self._registry.get(request_id.strip().upper())        #(2)
+        if not isinstance(request_id, str): #c1(¿texto?)                              #(1)
+            return None #c2
+        return self._registry.get(request_id.strip().upper()) #c3(limpiar)+c4(buscar) #(2)
 
     ##----------------------------------------------------
     ##              EXPLICACIÓN LÓGICA
@@ -146,12 +145,12 @@ class RequestQueue:
     #Coste: O(1).
 
     def dequeue(self) -> Request:
-        if self.is_empty():                                          #(1)
-            raise EmptyQueueError("No hay solicitudes pendientes")
-        request = self._pending.popleft()                            #(2)
-        request.status = RequestStatus.HANDLED                       #(3)
-        request.handled_at = datetime.now()                          #(4)
-        return request                                               #(5)
+        if self.is_empty(): #c1(¿hay alguien?)                       #(1)
+            raise EmptyQueueError("No hay solicitudes pendientes")#c2
+        request = self._pending.popleft()  #c3(sacar el primero)     #(2)
+        request.status = RequestStatus.HANDLED #c4(marcar atendida)  #(3)
+        request.handled_at = datetime.now() #c5(apuntar la hora)     #(4)
+        return request  #c6                                          #(5)
 
     ##----------------------------------------------------
     ##              EXPLICACIÓN LÓGICA

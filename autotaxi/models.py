@@ -18,7 +18,7 @@ class RequestStatus(Enum):
     UNRESOLVED = "UNRESOLVED"   #no se pudo resolver (para la versión final)
 
 
-#El model de la ficha
+#El molde de la ficha
 @dataclass
 class Request:
     request_id: str         #identificador(texto) "R-0001"

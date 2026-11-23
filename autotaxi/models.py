@@ -15,7 +15,7 @@ position = tuple[int, int] #fila, columna
 class RequestStatus(Enum):
     PENDING = "PENDING"         #registrada, esperando en la cola
     HANDLED = "HANDLED"         #estraída de la cola y atendida
-    UNRESOLVED = "UNRESOLVED"   #no se pudo resolve
+    UNRESOLVED = "UNRESOLVED"   #se buscó la ruta y no existe ninguna (no_resuelta)
     INVALID = "INVALID"         #para origen/destino fuera del mapa o sobre un obstáculo
 
 
@@ -33,6 +33,11 @@ class Request:
     status: RequestStatus = RequestStatus.PENDING
     handled_at: datetime | None = None
     #EL datetime |None significa: puede ser una hora o nada, empieza en nada porque todavía no se ha atendido. 
+
+    #RESULTADO DE LA BÚSQUEDA (se rellena al atender la solicitud)
+    route: list[position] = field(default_factory=list) #casillas del origen al destino
+    route_length: int | None = None   #número de movimientos = len(route) - 1
+    result_note: str = ""             #motivo si es INVALID o UNRESOLVED
 
 ##--------------------------------------------------------------------
 ## LÓGICA COMPLETA

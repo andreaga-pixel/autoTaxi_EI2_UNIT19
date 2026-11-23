@@ -7,7 +7,7 @@
 #     Se entra por el final y se sale por el principio (FIFO).
 #   - EL CONTADOR (_next_order): da a cada solicitud su número de llegada (1, 2, 3...).
 
-#Recordatorio en los metodos cuando pondo ->None: esto indica lo que me devuelve
+#Recordatorio en los metodos cuando pongo ->None: esto indica lo que me devuelve
 #Importaciones
 #deque para la fila y datetime para apuntar la hora de extracción.
 
@@ -17,7 +17,7 @@ from datetime import datetime
 #De mis archivos: los errores, la ficha de solicitud y las comprobaciones.
 from .errors import DuplicateIdError, EmptyQueueError
 from .models import Request, RequestStatus
-from .validation import check_required_fields, validate_id, validate_position, validate_user
+from .validation import (check_required_fields, validate_id, validate_position, validate_priority, validate_user)
 
 
 class RequestQueue:
@@ -51,11 +51,12 @@ class RequestQueue:
         user = validate_user(data["user"]) #c3
         pickup = validate_position(data["pickup"]) #c4
         destination = validate_position(data["destination"]) #c4
+        priority = validate_priority(data.get("priority"))            #opcional: si no viene, vale 0
         if request_id in self._registry: #c5(búsqueda en el dic.)     #(3)
             raise DuplicateIdError(f"Ya existe una solicitud con ID {request_id}")
 
         #FASE 2: crear la solicitud y guardarla
-        request = Request(request_id, user, pickup, destination,arrival_order=self._next_order) #c6 #(4)
+        request = Request(request_id, user, pickup, destination, priority=priority, arrival_order=self._next_order) #c6   #(4)
         self._next_order += 1 #c7                                    #(5)
         self._registry[request_id] = request #c8(insercion en el dic)#(6)
         self._pending.append(request) #c9(añadir al final del deque) #(7)
@@ -84,6 +85,11 @@ class RequestQueue:
     #¿Por qué en dos fases? Si guardara primero y comprobara después, un fallo
     #podría dejar un ID apuntado en la libreta sin solicitud en la fila.
     #Así la operación se hace entera o no se hace.
+
+    #La prioridad es opcional, por eso NO está en los campos obligatorios.
+    #Se lee con data.get("priority"): si el campo no existe devuelve None
+    #(data["priority"] daría error). Se valida en la FASE 1, antes de guardar nada,
+    #para mantener la regla de "todo o nada".
 
     ##---------------------------------------------------------------------
 

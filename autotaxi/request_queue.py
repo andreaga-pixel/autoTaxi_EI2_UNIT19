@@ -15,7 +15,7 @@ from collections import deque
 from datetime import datetime
 
 #De mis archivos: los errores, la ficha de solicitud y las comprobaciones.
-from .errors import DuplicateIdError, EmptyQueueError
+from .errors import BatchMismatchError, DuplicateIdError, EmptyQueueError
 from .models import Request, RequestStatus
 from .validation import (check_required_fields, validate_id, validate_position, validate_priority, validate_user)
 
@@ -186,6 +186,46 @@ class RequestQueue:
     ##------------------------------------------------------
     #Devuelve True si no queda ninguna solicitud PENDIENTE en la fila.
     #Las atendidas no cuentan: están en la libreta, pero ya no en la fila.
+
+    ##---------------------------------------------------------------------
+    
+    
+    
+    #REORDENAR LAS PENDIENTES SEGÚN LA POLÍTICA DE SERVICIO
+    #Coste: O(p), con p = número de pendientes.
+
+    def reorder_pending(self, new_order: list[Request]) -> None:
+        #FASE 1: comprobar que es el mismo lote, sin tocar nada
+        if len(new_order) != len(self._pending):                         #(1)
+            raise BatchMismatchError(
+                f"El lote ordenado tiene {len(new_order)} solicitudes y hay {len(self._pending)} pendientes")
+        ids_nuevos = {r.request_id for r in new_order}                   #(2)
+        ids_actuales = {r.request_id for r in self._pending}
+        if len(ids_nuevos) != len(new_order):                            #(3)
+            raise BatchMismatchError("El lote ordenado tiene solicitudes repetidas")
+        if ids_nuevos != ids_actuales:                                   #(4)
+            raise BatchMismatchError("El lote ordenado no tiene las mismas solicitudes que las pendientes")
+
+        #FASE 2: sustituir la fila por la nueva, en el orden recibido
+        self._pending = deque(new_order)                                 #(5)
+
+    ##----------------------------------------------------
+    ##              EXPLICACIÓN LÓGICA
+    ##------------------------------------------------------
+    #El gestor NO ordena: recibe un lote ya ordenado (por ordenacion.py) y comprueba que es el mismo lote antes de aceptarlo.
+
+    #   1. ¿Tiene el mismo número de solicitudes? Si no, se ha perdido o sobra alguna.
+    #   2. Guarda los IDs del lote nuevo y de la fila actual en dos conjuntos (set).
+    #      Un set no admite repetidos.
+    #   3. Si el set es más pequeño que la lista, es que había IDs repetidos.
+    #   4. Si los dos sets no son iguales, hay alguna solicitud que no estaba pendiente.
+    #   5. Si todo está bien, la fila pasa a tener el nuevo orden.
+    #
+    #Es el mismo "todo o nada" de enqueue (regla R7): si algo falla, la fila queda exactamente como estaba.
+    #
+    #¿Rompe esto el FIFO? No. La política (prioridad + llegada) decide en qué orden se colocan las solicitudes, 
+    # y después la fila sigue sacando siempre por el principio (popleft). Ordenar decide el orden; la cola lo respeta.
+    #El arrival_order de cada solicitud NO cambia: sigue diciendo cuándo llegó.
 
     ##---------------------------------------------------------------------
 

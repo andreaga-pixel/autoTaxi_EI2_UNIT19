@@ -28,3 +28,9 @@ class InvalidPositionError(AutoTaxiError):
 #Extraer de una estructura vacía debe termianr de forma controlada
 class EmptyQueueError(AutoTaxiError):
     """Se intenta extraer de una cola sin solicitudes pendientes."""
+
+
+#Lote reordenado incorrecto
+#Al reordenar las pendientes, el lote nuevo debe tener EXACTAMENTE las mismas solicitudes: ni perder ninguna ni repetir ninguna.
+class BatchMismatchError(AutoTaxiError):
+    """El lote ordenado no contiene exactamente las mismas solicitudes pendientes."""

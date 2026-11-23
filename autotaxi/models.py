@@ -15,7 +15,8 @@ position = tuple[int, int] #fila, columna
 class RequestStatus(Enum):
     PENDING = "PENDING"         #registrada, esperando en la cola
     HANDLED = "HANDLED"         #estraída de la cola y atendida
-    UNRESOLVED = "UNRESOLVED"   #no se pudo resolver (para la versión final)
+    UNRESOLVED = "UNRESOLVED"   #no se pudo resolve
+    INVALID = "INVALID"         #para origen/destino fuera del mapa o sobre un obstáculo
 
 
 #El molde de la ficha
@@ -25,6 +26,7 @@ class Request:
     user: str               #usuario(texto) "Ana"
     pickup: position        #origen(posicion)(0,1)
     destination: position   #destino(posicion)(2,3)
+    priority: int=0         #el número más bajo se atiende antes.
     arrival_order: int=0    #empieza valiendo 0 
     time_received: datetime = field(default_factory=datetime.now)
     #El field(----) significa: cada vez que se cree una solicitud mira el reloj. 

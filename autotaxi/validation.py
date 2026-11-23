@@ -110,6 +110,29 @@ def validate_position(value) -> position:
 
 ##---------------------------------------------------------------------
 
+
+# VALIDAR LA PRIORIDAD
+#La prioridad es opcional. Si se da, debe ser un entero mayor o igual que 0.
+
+def validate_priority(value) -> int:
+    if value is None:  #(1)
+        return 0
+    if type(value) is not int or value < 0: #(2)
+        raise InvalidDataError(f"La prioridad debe ser un entero mayor o igual que 0: {value!r}")
+    return value #(3)
+
+##----------------------------------------------------
+##              EXPLICACIÓN LÓGICA
+##------------------------------------------------------
+#Esta función hace tres cosas:
+#   1. Si la solicitud no trae prioridad, devuelve 0. Así las solicitudes
+#      sin prioridad siguen funcionando: todas empatan y se atienden por orden de llegada.
+#   2. Si trae prioridad, tiene que ser un entero y no puede ser negativa. 
+#      Si no cumple esto -> InvalidDataError.
+#   3. Si está bien, devuelve la prioridad.
+#Cuanto MÁS BAJO es el número, ANTES se atiende la solicitud.
+
+##---------------------------------------------------------------------
 ##TODAS LAS FUNCIONES SIGUEN UNA LÓGICA COMÚN
 ##¿Está mal?  -> raise (lanzar el error) y PARAR
 ##¿Está bien? -> return (devolver el dato limpio)
